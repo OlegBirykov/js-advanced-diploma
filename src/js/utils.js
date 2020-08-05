@@ -1,4 +1,4 @@
-export function calcTileType(index, boardSize) {
+export function calcTileType(/* index, boardSize */) {
   // TODO: write logic here
   return 'center';
 }

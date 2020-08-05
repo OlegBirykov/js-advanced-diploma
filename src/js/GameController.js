@@ -4,20 +4,20 @@ export default class GameController {
     this.stateService = stateService;
   }
 
-  init() {
-    // TODO: add event listeners to gamePlay events
-    // TODO: load saved stated from stateService
-  }
+  //  init() {
+  // TODO: add event listeners to gamePlay events
+  // TODO: load saved stated from stateService
+  //  }
 
-  onCellClick(index) {
-    // TODO: react to click
-  }
+  //  onCellClick(index) {
+  // TODO: react to click
+  //  }
 
-  onCellEnter(index) {
-    // TODO: react to mouse enter
-  }
+  //  onCellEnter(index) {
+  // TODO: react to mouse enter
+  //  }
 
-  onCellLeave(index) {
-    // TODO: react to mouse leave
-  }
+//  onCellLeave(index) {
+  // TODO: react to mouse leave
+//  }
 }
