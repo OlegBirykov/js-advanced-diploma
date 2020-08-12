@@ -1,9 +1,8 @@
-/* eslint-disable no-underscore-dangle */
-
 import Character from './Character';
+import { boardSize } from './utils';
 
 export default class PositionedCharacter {
-  constructor(character, position, boardSize) {
+  constructor(character, position) {
     if (!(character instanceof Character)) {
       throw new Error('character must be instance of Character or its children');
     }
@@ -12,49 +11,35 @@ export default class PositionedCharacter {
       throw new Error('position must be a number');
     }
 
-    if (typeof boardSize !== 'number') {
-      throw new Error('boardSize must be a number');
-    }
-
     this.character = character;
-    this.boardSize = boardSize;
     this.position = position;
   }
 
-  static indexToXY(index, boardSize) {
+  static indexToXY(index) {
     return { x: index % boardSize, y: Math.floor(index / boardSize) };
   }
 
-  static xyToIndex(x, y, boardSize) {
+  static xyToIndex(x, y) {
     return y * boardSize + x;
   }
 
-  set position(value) {
-    this._position = value;
-    const { x, y } = PositionedCharacter.indexToXY(this._position, this.boardSize);
-    this._x = x;
-    this._y = y;
-  }
-
-  get position() {
-    return this._position;
-  }
-
   set x(value) {
-    this._x = value;
-    this._position = PositionedCharacter.xyToIndex(this._x, this._y, this.boardSize);
+    const { y } = PositionedCharacter.indexToXY(this.position);
+    this.position = PositionedCharacter.xyToIndex(value, y);
   }
 
   get x() {
-    return this._x;
+    const { x } = PositionedCharacter.indexToXY(this.position);
+    return x;
   }
 
   set y(value) {
-    this._y = value;
-    this._position = PositionedCharacter.xyToIndex(this._x, this._y, this.boardSize);
+    const { x } = PositionedCharacter.indexToXY(this.position);
+    this.position = PositionedCharacter.xyToIndex(x, value);
   }
 
   get y() {
-    return this._y;
+    const { y } = PositionedCharacter.indexToXY(this.position);
+    return y;
   }
 }

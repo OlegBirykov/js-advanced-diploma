@@ -7,33 +7,35 @@ import Vampire from './Vampire';
 import Undead from './Undead';
 import Daemon from './Daemon';
 import PositionedCharacter from './PositionedCharacter';
+import GameState from './GameState';
+import { boardSize } from './utils';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
+    this.gamerTeam = new Team();
+    this.computerTeam = new Team();
+    this.gameState = GameState.from({ gamerTeam: this.gamerTeam, computerTeam: this.computerTeam });
+    this.gamerPos = new Set();
+    this.computerPos = new Set();
   }
 
   init() {
-    this.gamerTeam = new Team(this.gamePlay.boardSize);
-    this.computerTeam = new Team(this.gamePlay.boardSize);
-    this.gamerPos = new Set();
-    this.computerPos = new Set();
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
-    this.level = 0;
     this.levelUp();
   }
 
   levelUp() {
-    this.level++;
-    this.gamePlay.drawUi(themes[this.level]);
+    this.gameState.level++;
+    this.gamePlay.drawUi(themes[this.gameState.level]);
 
-    if (this.level > 1) {
+    if (this.gameState.level > 1) {
       this.gamerTeam.upgrade();
     }
 
-    switch (this.level) {
+    switch (this.gameState.level) {
       case 1:
         this.gamerTeam.addCharacters([Bowman, Swordsman], 1, 2);
         this.computerTeam.addCharacters([Vampire, Undead, Daemon], 1, 2);
@@ -54,12 +56,11 @@ export default class GameController {
 
     this.gamerPos.clear();
     this.computerPos.clear();
-    const { boardSize } = this.gamePlay;
-    for (let i = 0; i < this.gamePlay.boardSize; i++) {
-      this.gamerPos.add(PositionedCharacter.xyToIndex(0, i, boardSize));
-      this.gamerPos.add(PositionedCharacter.xyToIndex(1, i, boardSize));
-      this.computerPos.add(PositionedCharacter.xyToIndex(boardSize - 2, i, boardSize));
-      this.computerPos.add(PositionedCharacter.xyToIndex(boardSize - 1, i, boardSize));
+    for (let i = 0; i < boardSize; i++) {
+      this.gamerPos.add(PositionedCharacter.xyToIndex(0, i));
+      this.gamerPos.add(PositionedCharacter.xyToIndex(1, i));
+      this.computerPos.add(PositionedCharacter.xyToIndex(boardSize - 2, i));
+      this.computerPos.add(PositionedCharacter.xyToIndex(boardSize - 1, i));
     }
 
     for (const { position } of this.gamerTeam.members) {
@@ -87,6 +88,7 @@ export default class GameController {
 
     console.log(this.gamerTeam);
     console.log(this.computerTeam);
+    console.log(this.gameState);
   }
 
   redraw() {

@@ -14,12 +14,12 @@ export function* characterGenerator(allowedTypes, maxLevel) {
   }
 }
 
-export function generateTeam(allowedTypes, maxLevel, characterCount, boardSize) {
+export function generateTeam(allowedTypes, maxLevel, characterCount) {
   const result = [];
   const generator = [...characterGenerator(allowedTypes, maxLevel)];
   for (let i = 0; i < characterCount; i++) {
     const character = generator[Math.trunc(Math.random() * generator.length)];
-    result.push(new PositionedCharacter(character, -1, boardSize));
+    result.push(new PositionedCharacter(character, -1));
   }
   return result;
 }

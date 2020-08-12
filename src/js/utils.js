@@ -1,7 +1,8 @@
-import PositionedCharacter from './PositionedCharacter';
+export const boardSize = 8;
 
-export function calcTileType(index, boardSize) {
-  const { x, y } = PositionedCharacter.indexToXY(index, boardSize);
+export function calcTileType(index) {
+  const x = index % boardSize;
+  const y = Math.floor(index / boardSize);
   const max = boardSize - 1;
   if (!x && !y) {
     return 'top-left';

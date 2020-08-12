@@ -1,6 +1,8 @@
 export default class GameState {
-//  static from(object) {
-  // TODO: create object
-//    return null;
-//  }
+  static from(object) {
+    const gameState = { level: 0, isGamerStep: true };
+    gameState.gamerTeam = object.gamerTeam;
+    gameState.computerTeam = object.computerTeam;
+    return gameState;
+  }
 }

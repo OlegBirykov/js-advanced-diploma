@@ -1,13 +1,12 @@
 import { generateTeam } from './generators';
 
 export default class Team {
-  constructor(boardSize) {
+  constructor() {
     this.members = [];
-    this.boardSize = boardSize;
   }
 
   addCharacters(allowedTypes, maxLevel, characterCount) {
-    const add = generateTeam(allowedTypes, maxLevel, characterCount, this.boardSize);
+    const add = generateTeam(allowedTypes, maxLevel, characterCount);
     this.members = [...this.members, ...add];
   }
 
