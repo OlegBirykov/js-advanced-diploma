@@ -16,26 +16,29 @@ export default class GameController {
     this.stateService = stateService;
     this.gamerTeam = new Team();
     this.computerTeam = new Team();
-    this.gameState = GameState.from({ gamerTeam: this.gamerTeam, computerTeam: this.computerTeam });
+    this.state = GameState.from(this);
     this.gamerPos = new Set();
     this.computerPos = new Set();
   }
 
   init() {
-    // TODO: add event listeners to gamePlay events
+    this.gamePlay.addCellClickListener((index) => this.onCellClick(index));
+    this.gamePlay.addCellEnterListener((index) => this.onCellEnter(index));
+    this.gamePlay.addCellLeaveListener((index) => this.onCellLeave(index));
+
     // TODO: load saved stated from stateService
-    this.levelUp();
+    this.levelUp(); // Если не удалось загрузить состояние
   }
 
   levelUp() {
-    this.gameState.level++;
-    this.gamePlay.drawUi(themes[this.gameState.level]);
+    this.state.level++;
+    this.gamePlay.drawUi(themes[this.state.level]);
 
-    if (this.gameState.level > 1) {
+    if (this.state.level > 1) {
       this.gamerTeam.upgrade();
     }
 
-    switch (this.gameState.level) {
+    switch (this.state.level) {
       case 1:
         this.gamerTeam.addCharacters([Bowman, Swordsman], 1, 2);
         this.computerTeam.addCharacters([Vampire, Undead, Daemon], 1, 2);
@@ -88,22 +91,39 @@ export default class GameController {
 
     console.log(this.gamerTeam);
     console.log(this.computerTeam);
-    console.log(this.gameState);
+    console.log(this.state);
   }
 
   redraw() {
     this.gamePlay.redrawPositions([...this.gamerTeam.members, ...this.computerTeam.members]);
   }
 
-  //  onCellClick(index) {
-  // TODO: react to click
-  //  }
+  onCellClick(index) {
+    console.log(index, this);
+  }
 
-  //  onCellEnter(index) {
-  // TODO: react to mouse enter
-  //  }
+  onCellEnter(index) {
+    const ch = this.getCharacter(index);
+    if (!ch) {
+      return;
+    }
+    const message = `\u{1F396}${ch.level} \u{2694}${ch.attack} \u{1F6E1}${ch.defence} \u{2764}${ch.health}`;
+    this.gamePlay.showCellTooltip(message, index);
+  }
 
-//  onCellLeave(index) {
-  // TODO: react to mouse leave
-//  }
+  onCellLeave(index) {
+    this.gamePlay.hideCellTooltip(index);
+  }
+
+  getCharacter(index) {
+    let i = this.gamerTeam.members.findIndex((item) => item.position === index);
+    if (i !== -1) {
+      return this.gamerTeam.members[i].character;
+    }
+    i = this.computerTeam.members.findIndex((item) => item.position === index);
+    if (i !== -1) {
+      return this.computerTeam.members[i].character;
+    }
+    return null;
+  }
 }
