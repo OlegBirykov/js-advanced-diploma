@@ -9,6 +9,7 @@ import Daemon from './Daemon';
 import PositionedCharacter from './PositionedCharacter';
 import GameState from './GameState';
 import GamePlay from './GamePlay';
+import cursor from './cursors';
 import { boardSize } from './utils';
 
 export default class GameController {
@@ -113,9 +114,20 @@ export default class GameController {
     }
 
     const ch = this.getCharacter(index);
+    const selCh = this.getCharacter(this.selectedCharacterIndex);
 
     switch (this.targetColor) {
       case 'green':
+        this.gamePlay.deselectCell(this.selectedCharacterIndex);
+        this.selectedCharacterIndex = null;
+        this.gamePlay.deselectCell(this.targetIndex);
+        this.targetIndex = null;
+        this.gamePlay.setCursor(cursor.notallowed);
+        this.targetColor = 'yellow';
+        selCh.position = index;
+        this.state.isGamerStep = false;
+        this.redraw();
+        setTimeout(() => this.computerStep(), 1000);
         break;
       case 'red':
         break;
@@ -132,11 +144,15 @@ export default class GameController {
         }
         this.gamePlay.selectCell(index, this.targetColor);
         this.selectedCharacterIndex = index;
-        this.gamePlay.setCursor('pointer');
+        this.gamePlay.setCursor(cursor.pointer);
     }
   }
 
   onCellEnter(index) {
+    if (!this.state.isGamerStep) {
+      return;
+    }
+
     const ch = this.getCharacter(index);
     if (ch) {
       const message = `\u{1F396}${ch.character.level} \u{2694}${ch.character.attack} \u{1F6E1}${ch.character.defence} \u{2764}${ch.character.health}`;
@@ -154,7 +170,7 @@ export default class GameController {
     if (ch && this.constructor.isGamerCharacter(ch)) {
       this.targetIndex = null;
       this.targetColor = 'yellow';
-      this.gamePlay.setCursor('pointer');
+      this.gamePlay.setCursor(cursor.pointer);
       return;
     }
 
@@ -164,7 +180,7 @@ export default class GameController {
       this.targetIndex = index;
       this.targetColor = 'green';
       this.gamePlay.selectCell(index, this.targetColor);
-      this.gamePlay.setCursor('pointer');
+      this.gamePlay.setCursor(cursor.pointer);
       return;
     }
 
@@ -173,16 +189,20 @@ export default class GameController {
       this.targetIndex = index;
       this.targetColor = 'red';
       this.gamePlay.selectCell(index, this.targetColor);
-      this.gamePlay.setCursor('crosshair');
+      this.gamePlay.setCursor(cursor.crosshair);
       return;
     }
 
     this.targetIndex = null;
     this.targetColor = 'yellow';
-    this.gamePlay.setCursor('not-allowed');
+    this.gamePlay.setCursor(cursor.notallowed);
   }
 
   onCellLeave(index) {
+    if (!this.state.isGamerStep) {
+      return;
+    }
+
     this.gamePlay.hideCellTooltip(index);
   }
 
@@ -237,5 +257,10 @@ export default class GameController {
       default:
         return distance <= 1;
     }
+  }
+
+  computerStep() {
+    this.gamePlay.setCursor(cursor.auto);
+    this.state.isGamerStep = true;
   }
 }
