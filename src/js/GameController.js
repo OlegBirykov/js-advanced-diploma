@@ -8,6 +8,7 @@ import Undead from './Undead';
 import Daemon from './Daemon';
 import PositionedCharacter from './PositionedCharacter';
 import GameState from './GameState';
+import GamePlay from './GamePlay';
 import { boardSize } from './utils';
 
 export default class GameController {
@@ -19,6 +20,9 @@ export default class GameController {
     this.state = GameState.from(this);
     this.gamerPos = new Set();
     this.computerPos = new Set();
+    this.selectedCharacterIndex = null;
+    this.targetIndex = null;
+    this.targetColor = 'yellow';
   }
 
   init() {
@@ -26,8 +30,17 @@ export default class GameController {
     this.gamePlay.addCellEnterListener((index) => this.onCellEnter(index));
     this.gamePlay.addCellLeaveListener((index) => this.onCellLeave(index));
 
-    // TODO: load saved stated from stateService
-    this.levelUp(); // Если не удалось загрузить состояние
+    // Здесь будет попытка загрузки состояния, если попытка не удалась, то:
+    this.newGame();
+  }
+
+  newGame() {
+    this.gamerTeam.members = [];
+    this.computerTeam.members = [];
+    this.state.score = 0;
+    this.state.isGamerStep = true;
+    this.state.level = 0;
+    this.levelUp();
   }
 
   levelUp() {
@@ -88,10 +101,6 @@ export default class GameController {
     }
 
     this.redraw();
-
-    console.log(this.gamerTeam);
-    console.log(this.computerTeam);
-    console.log(this.state);
   }
 
   redraw() {
@@ -99,16 +108,78 @@ export default class GameController {
   }
 
   onCellClick(index) {
-    console.log(index, this);
+    if (!this.state.isGamerStep) {
+      return;
+    }
+
+    const ch = this.getCharacter(index);
+
+    switch (this.targetColor) {
+      case 'green':
+        break;
+      case 'red':
+        break;
+      default:
+        if (!ch) {
+          break;
+        }
+        if (!this.constructor.isGamerCharacter(ch)) {
+          GamePlay.showError('This character is disable for selection');
+          break;
+        }
+        if (this.selectedCharacterIndex !== null) {
+          this.gamePlay.deselectCell(this.selectedCharacterIndex);
+        }
+        this.gamePlay.selectCell(index, this.targetColor);
+        this.selectedCharacterIndex = index;
+        this.gamePlay.setCursor('pointer');
+    }
   }
 
   onCellEnter(index) {
     const ch = this.getCharacter(index);
-    if (!ch) {
+    if (ch) {
+      const message = `\u{1F396}${ch.character.level} \u{2694}${ch.character.attack} \u{1F6E1}${ch.character.defence} \u{2764}${ch.character.health}`;
+      this.gamePlay.showCellTooltip(message, index);
+    }
+
+    if (this.selectedCharacterIndex === null) {
       return;
     }
-    const message = `\u{1F396}${ch.level} \u{2694}${ch.attack} \u{1F6E1}${ch.defence} \u{2764}${ch.health}`;
-    this.gamePlay.showCellTooltip(message, index);
+
+    if (this.targetIndex !== null) {
+      this.gamePlay.deselectCell(this.targetIndex);
+    }
+
+    if (ch && this.constructor.isGamerCharacter(ch)) {
+      this.targetIndex = null;
+      this.targetColor = 'yellow';
+      this.gamePlay.setCursor('pointer');
+      return;
+    }
+
+    const selCh = this.getCharacter(this.selectedCharacterIndex);
+
+    if (!ch && this.isMove(selCh, PositionedCharacter.indexToXY(index))) {
+      this.targetIndex = index;
+      this.targetColor = 'green';
+      this.gamePlay.selectCell(index, this.targetColor);
+      this.gamePlay.setCursor('pointer');
+      return;
+    }
+
+    if (ch && !this.constructor.isGamerCharacter(ch)
+      && this.isAttack(selCh, PositionedCharacter.indexToXY(index))) {
+      this.targetIndex = index;
+      this.targetColor = 'red';
+      this.gamePlay.selectCell(index, this.targetColor);
+      this.gamePlay.setCursor('crosshair');
+      return;
+    }
+
+    this.targetIndex = null;
+    this.targetColor = 'yellow';
+    this.gamePlay.setCursor('not-allowed');
   }
 
   onCellLeave(index) {
@@ -118,12 +189,53 @@ export default class GameController {
   getCharacter(index) {
     let i = this.gamerTeam.members.findIndex((item) => item.position === index);
     if (i !== -1) {
-      return this.gamerTeam.members[i].character;
+      return this.gamerTeam.members[i];
     }
     i = this.computerTeam.members.findIndex((item) => item.position === index);
     if (i !== -1) {
-      return this.computerTeam.members[i].character;
+      return this.computerTeam.members[i];
     }
     return null;
+  }
+
+  static isGamerCharacter(character) {
+    const { type } = character.character;
+    return (type === 'bowman') || (type === 'swordsman') || (type === 'magician');
+  }
+
+  static getDistance(character, target) {
+    const { x, y } = character;
+    const { x: xTarget, y: yTarget } = target;
+    return Math.max(Math.abs(x - xTarget), Math.abs(y - yTarget));
+  }
+
+  isMove(character, target) {
+    const { type } = character.character;
+    const distance = this.constructor.getDistance(character, target);
+    switch (type) {
+      case 'swordsman':
+      case 'undead':
+        return distance <= 4;
+      case 'bowman':
+      case 'vampire':
+        return distance <= 2;
+      default:
+        return distance <= 1;
+    }
+  }
+
+  isAttack(character, target) {
+    const { type } = character.character;
+    const distance = this.constructor.getDistance(character, target);
+    switch (type) {
+      case 'magician':
+      case 'daemon':
+        return distance <= 4;
+      case 'bowman':
+      case 'vampire':
+        return distance <= 2;
+      default:
+        return distance <= 1;
+    }
   }
 }

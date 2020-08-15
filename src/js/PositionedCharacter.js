@@ -24,22 +24,22 @@ export default class PositionedCharacter {
   }
 
   set x(value) {
-    const { y } = PositionedCharacter.indexToXY(this.position);
-    this.position = PositionedCharacter.xyToIndex(value, y);
+    const { y } = this.constructor.indexToXY(this.position);
+    this.position = this.constructor.xyToIndex(value, y);
   }
 
   get x() {
-    const { x } = PositionedCharacter.indexToXY(this.position);
+    const { x } = this.constructor.indexToXY(this.position);
     return x;
   }
 
   set y(value) {
-    const { x } = PositionedCharacter.indexToXY(this.position);
-    this.position = PositionedCharacter.xyToIndex(x, value);
+    const { x } = this.constructor.indexToXY(this.position);
+    this.position = this.constructor.xyToIndex(x, value);
   }
 
   get y() {
-    const { y } = PositionedCharacter.indexToXY(this.position);
+    const { y } = this.constructor.indexToXY(this.position);
     return y;
   }
 }
