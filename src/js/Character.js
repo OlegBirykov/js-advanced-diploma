@@ -28,4 +28,18 @@ export default class Character {
   set defence(value) {
     this._defence = Math.round(value);
   }
+
+  get health() {
+    return this._health;
+  }
+
+  set health(value) {
+    if (value < 0) {
+      this._health = 0;
+    } else if (value > 100) {
+      this._health = 100;
+    } else {
+      this._health = value;
+    }
+  }
 }

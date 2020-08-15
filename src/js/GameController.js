@@ -108,7 +108,7 @@ export default class GameController {
     this.gamePlay.redrawPositions([...this.gamerTeam.members, ...this.computerTeam.members]);
   }
 
-  onCellClick(index) {
+  async onCellClick(index) {
     if (!this.state.isGamerStep) {
       return;
     }
@@ -130,6 +130,22 @@ export default class GameController {
         setTimeout(() => this.computerStep(), 1000);
         break;
       case 'red':
+        this.gamePlay.deselectCell(this.selectedCharacterIndex);
+        this.selectedCharacterIndex = null;
+        this.gamePlay.deselectCell(this.targetIndex);
+        this.targetIndex = null;
+        this.gamePlay.setCursor(cursor.notallowed);
+        this.targetColor = 'yellow';
+        ch.character.health = await this.attack(selCh, ch);
+        if (ch.character.health === 0) {
+          const i = this.computerTeam.members.findIndex((item) => item.position === index);
+          this.computerTeam.members.splice(i, 1);
+        }
+        this.redraw();
+        // ***** Здесь будет возможен переход на новый уровень (не забыть курсор-стрелку)
+        // а это, если кто-то из врагов ещё жив
+        this.state.isGamerStep = false;
+        setTimeout(() => this.computerStep(), 1000);
         break;
       default:
         if (!ch) {
@@ -257,6 +273,14 @@ export default class GameController {
       default:
         return distance <= 1;
     }
+  }
+
+  async attack(attacker, target) {
+    const { attack } = attacker.character;
+    const { defence, health } = target.character;
+    const damage = Math.round(Math.max(attack - defence, attack * 0.1));
+    await this.gamePlay.showDamage(target.position, damage);
+    return health - damage;
   }
 
   computerStep() {
