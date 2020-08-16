@@ -47,6 +47,7 @@ export default class GameController {
   levelUp() {
     this.state.level++;
     this.gamePlay.drawUi(themes[this.state.level]);
+    this.gamePlay.setCursor(cursor.auto);
 
     if (this.state.level > 1) {
       this.gamerTeam.upgrade();
@@ -142,10 +143,21 @@ export default class GameController {
           this.computerTeam.members.splice(i, 1);
         }
         this.redraw();
-        // ***** Здесь будет возможен переход на новый уровень (не забыть курсор-стрелку)
-        // а это, если кто-то из врагов ещё жив
-        this.state.isGamerStep = false;
-        setTimeout(() => this.computerStep(), 1000);
+        if (this.computerTeam.size) {
+          this.state.isGamerStep = false;
+          setTimeout(() => this.computerStep(), 1000);
+          break;
+        }
+        this.state.score += this.gamerTeam.members.reduce(
+          (sum, item) => sum + item.character.health, 0,
+        );
+        if (this.state.score > this.state.maxScore) {
+          this.state.maxScore = this.state.score;
+        }
+        GamePlay.showMessage(`level ${this.state.level} completed
+score: ${this.state.score}
+maxscore: ${this.state.maxScore}`);
+        this.levelUp();
         break;
       default:
         if (!ch) {
