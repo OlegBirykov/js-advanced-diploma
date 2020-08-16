@@ -5,5 +5,6 @@ export default class Bowman extends Character {
     super(level, 'bowman');
     this.attack = 25 * this.k;
     this.defence = 25 * this.k;
+    delete this.k;
   }
 }

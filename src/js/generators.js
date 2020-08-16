@@ -10,7 +10,9 @@ import PositionedCharacter from './PositionedCharacter';
 
 export function* characterGenerator(allowedTypes, maxLevel) {
   for (const Type of allowedTypes) {
-    yield { Type, level: Math.trunc(Math.random() * maxLevel) + 1 };
+    for (let level = 1; level <= maxLevel; level++) {
+      yield { Type, level };
+    }
   }
 }
 
