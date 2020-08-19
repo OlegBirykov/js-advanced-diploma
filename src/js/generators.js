@@ -1,11 +1,3 @@
-/**
- * Generates random characters
- *
- * @param allowedTypes iterable of classes
- * @param maxLevel max character level
- * @returns Character type children (ex. Magician, Bowman, etc)
- */
-
 import PositionedCharacter from './PositionedCharacter';
 
 export function* characterGenerator(allowedTypes, maxLevel) {

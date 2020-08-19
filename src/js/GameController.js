@@ -16,11 +16,17 @@ export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
+
     this.gamerTeam = new Team();
     this.computerTeam = new Team();
-    this.state = GameState.from(this);
+    this.score = 0;
+    this.maxScore = 0;
+    this.isGamerStep = true;
+    this.level = 0;
+
     this.gamerPos = new Set();
     this.computerPos = new Set();
+
     this.selectedCharacterIndex = null;
     this.targetIndex = null;
     this.targetColor = 'yellow';
@@ -31,29 +37,123 @@ export default class GameController {
     this.gamePlay.addCellEnterListener((index) => this.onCellEnter(index));
     this.gamePlay.addCellLeaveListener((index) => this.onCellLeave(index));
 
-    // Здесь будет попытка загрузки состояния, если попытка не удалась, то:
-    this.newGame();
+    this.gamePlay.addNewGameListener(() => this.newGame());
+    this.gamePlay.addLoadGameListener(() => this.loadGame());
+    this.gamePlay.addSaveGameListener(() => this.saveGame());
+
+    window.addEventListener('unload', () => this.saveGame());
+
+    this.loadGame();
   }
 
   newGame() {
     this.gamerTeam.members = [];
     this.computerTeam.members = [];
-    this.state.score = 0;
-    this.state.isGamerStep = true;
-    this.state.level = 0;
+    this.score = 0;
+    this.isGamerStep = true;
+    this.level = 0;
+
+    this.selectedCharacterIndex = null;
+    this.targetIndex = null;
+    this.targetColor = 'yellow';
+
     this.levelUp();
+    this.saveGame();
+  }
+
+  loadGame() {
+    try {
+      const {
+        gamerTeam,
+        computerTeam,
+        level: shareLevel,
+        isGamerStep,
+        score,
+        maxScore,
+      } = this.stateService.load();
+
+      this.gamerTeam.members = [];
+      this.computerTeam.members = [];
+
+      const Classes = {
+        bowman: Bowman,
+        swordsman: Swordsman,
+        magician: Magician,
+        vampire: Vampire,
+        undead: Undead,
+        daemon: Daemon,
+      };
+
+      gamerTeam.members.forEach((item, index) => {
+        const {
+          character: {
+            level, _attack: attack, _defence: defence, _health: health, type,
+          },
+          position,
+        } = item;
+        this.gamerTeam.members.push(new PositionedCharacter(new Classes[type](level), position));
+        this.gamerTeam.members[index].character.attack = attack;
+        this.gamerTeam.members[index].character.defence = defence;
+        this.gamerTeam.members[index].character.health = health;
+      });
+
+      computerTeam.members.forEach((item, index) => {
+        const {
+          character: {
+            level, _attack: attack, _defence: defence, _health: health, type,
+          },
+          position,
+        } = item;
+        this.computerTeam.members.push(new PositionedCharacter(new Classes[type](level), position));
+        this.computerTeam.members[index].character.attack = attack;
+        this.computerTeam.members[index].character.defence = defence;
+        this.computerTeam.members[index].character.health = health;
+      });
+
+      this.level = shareLevel;
+      this.isGamerStep = isGamerStep;
+      this.score = score;
+      this.maxScore = maxScore;
+    } catch (err) {
+      GamePlay.showError('Load state error');
+      this.newGame();
+      return;
+    }
+
+    if (!this.level) {
+      this.newGame();
+      return;
+    }
+
+    this.selectedCharacterIndex = null;
+    this.targetIndex = null;
+    this.targetColor = 'yellow';
+
+    this.gamePlay.drawUi(themes[this.level]);
+    this.redraw();
+
+    if (!this.isGamerStep && this.computerTeam.members.size) {
+      this.gamePlay.setCursor(cursor.notallowed);
+      setTimeout(() => this.computerStep(), 1000);
+    } else {
+      this.gamePlay.setCursor(cursor.auto);
+    }
+  }
+
+  saveGame() {
+    this.stateService.save(GameState.from(this));
   }
 
   levelUp() {
-    this.state.level++;
-    this.gamePlay.drawUi(themes[this.state.level]);
+    this.level++;
+    this.gamePlay.drawUi(themes[this.level]);
     this.gamePlay.setCursor(cursor.auto);
 
-    if (this.state.level > 1) {
+    if (this.level > 1) {
       this.gamerTeam.upgrade();
     }
 
-    switch (this.state.level) {
+    switch (this.level) {
       case 1:
         this.gamerTeam.addCharacters([Bowman, Swordsman], 1, 2);
         this.computerTeam.addCharacters([Vampire, Undead, Daemon], 1, 2);
@@ -110,7 +210,7 @@ export default class GameController {
   }
 
   async onCellClick(index) {
-    if (!this.state.isGamerStep) {
+    if (!this.isGamerStep) {
       return;
     }
 
@@ -125,11 +225,14 @@ export default class GameController {
         this.targetIndex = null;
         this.gamePlay.setCursor(cursor.notallowed);
         this.targetColor = 'yellow';
+
         selCh.position = index;
-        this.state.isGamerStep = false;
+        this.isGamerStep = false;
         this.redraw();
+
         setTimeout(() => this.computerStep(), 1000);
         break;
+
       case 'red':
         this.gamePlay.deselectCell(this.selectedCharacterIndex);
         this.selectedCharacterIndex = null;
@@ -137,28 +240,41 @@ export default class GameController {
         this.targetIndex = null;
         this.gamePlay.setCursor(cursor.notallowed);
         this.targetColor = 'yellow';
+
         ch.character.health = await this.attack(selCh, ch);
         if (ch.character.health === 0) {
           const i = this.computerTeam.members.findIndex((item) => item.position === index);
           this.computerTeam.members.splice(i, 1);
         }
         this.redraw();
+
         if (this.computerTeam.size) {
-          this.state.isGamerStep = false;
+          this.isGamerStep = false;
           setTimeout(() => this.computerStep(), 1000);
           break;
         }
-        this.state.score += this.gamerTeam.members.reduce(
+
+        this.score += this.gamerTeam.members.reduce(
           (sum, item) => sum + item.character.health, 0,
         );
-        if (this.state.score > this.state.maxScore) {
-          this.state.maxScore = this.state.score;
+        if (this.score > this.maxScore) {
+          this.maxScore = this.score;
         }
-        GamePlay.showMessage(`level ${this.state.level} completed
-score: ${this.state.score}
-maxscore: ${this.state.maxScore}`);
-        this.levelUp();
+        GamePlay.showMessage(`Level ${this.level} completed
+Score: ${this.score}
+Maxscore: ${this.maxScore}`);
+
+        if (this.level < 4) {
+          this.levelUp();
+          break;
+        }
+
+        GamePlay.showMessage('This is a victory!');
+        this.isGamerStep = false;
+        this.gamerTeam.members = [];
+        this.redraw();
         break;
+
       default:
         if (!ch) {
           break;
@@ -177,7 +293,7 @@ maxscore: ${this.state.maxScore}`);
   }
 
   onCellEnter(index) {
-    if (!this.state.isGamerStep) {
+    if (!this.isGamerStep) {
       return;
     }
 
@@ -227,7 +343,7 @@ maxscore: ${this.state.maxScore}`);
   }
 
   onCellLeave(index) {
-    if (!this.state.isGamerStep) {
+    if (!this.isGamerStep) {
       return;
     }
 
@@ -297,6 +413,6 @@ maxscore: ${this.state.maxScore}`);
 
   computerStep() {
     this.gamePlay.setCursor(cursor.auto);
-    this.state.isGamerStep = true;
+    this.isGamerStep = true;
   }
 }
