@@ -411,7 +411,28 @@ Maxscore: ${this.maxScore}`);
     return health - damage;
   }
 
-  computerStep() {
+  async computerStep() {
+    const attackArray = [];
+    for (const compChar of this.computerTeam.members) {
+      for (const gamerChar of this.gamerTeam.members) {
+        if (this.isAttack(compChar, { x: gamerChar.x, y: gamerChar.y })) {
+          attackArray.push({ compChar, gamerChar });
+        }
+      }
+    }
+
+    if (attackArray.length) {
+      attackArray[0].gamerChar.character.health = await this.attack(
+        attackArray[0].compChar,
+        attackArray[0].gamerChar,
+      );
+      if (attackArray[0].gamerChar.character.health === 0) {
+        const i = this.gamerTeam.members
+          .findIndex((item) => item.position === attackArray[0].gamerChar.position);
+        this.gamerTeam.members.splice(i, 1);
+      }
+      this.redraw();
+    }
     this.gamePlay.setCursor(cursor.auto);
     this.isGamerStep = true;
   }
