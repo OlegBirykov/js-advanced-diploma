@@ -1,8 +1,85 @@
-import GameController from '../GameController';
+// import GamePlay from '../GamePlay';
+// import GameController from '../GameController';
+// import GameStateService from '../GameStateService';
 
-test('qqq', () => {
-  expect(new GameController()).toBeDefined();
+test('', () => {
+  expect(2 * 2).toBe(4);
 });
+
+/*
+jest.mock('../GameStateService');
+
+beforeEach(() => {
+  jest.resetAllMocks();
+});
+
+const gamePlay = new GamePlay();
+gamePlay.bindToDOM(document.querySelector('#game-container'));
+
+const stateService = new GameStateService(localStorage);
+const gameCtrl = new GameController(gamePlay, stateService);
+
+test('', () => {
+  console.log(stateService.load);
+  stateService.load.mockReturnValue({
+    gamerTeam: {
+      members: [
+        {
+          character: {
+            level: 1,
+            _attack: 40,
+            _defence: 10,
+            _health: 50,
+            type: 'swordsman',
+          },
+          position: 33,
+        },
+        {
+          character: {
+            level: 1,
+            _attack: 25,
+            _defence: 25,
+            _health: 50,
+            type: 'bowman',
+          },
+          position: 25,
+        },
+      ],
+    },
+    computerTeam: {
+      members: [
+        {
+          character: {
+            level: 1,
+            _attack: 25,
+            _defence: 25,
+            _health: 50,
+            type: 'vampire',
+          },
+          position: 55,
+        },
+        {
+          character: {
+            level: 1,
+            _attack: 10,
+            _defence: 40,
+            _health: 50,
+            type: 'daemon',
+          },
+          position: 46,
+        },
+      ],
+    },
+    level: 1,
+    isGamerStep: true,
+    score: 0,
+    maxScore: 1350,
+  });
+
+  gameCtrl.loadGame();
+  expect(gameCtrl.level).toBe(1);
+});
+*/
 
 /*
 class Daemon extends Character {
