@@ -388,6 +388,19 @@ Maxscore: ${this.maxScore}`);
     }
   }
 
+  isFreeMove(character) {
+    const { x: x0, y: y0 } = character;
+    for (let x = Math.max(x0 - 4, 0); x <= Math.min(x0 + 4, boardSize - 1); x++) {
+      for (let y = Math.max(y0 - 4, 0); y <= Math.min(y0 + 4, boardSize - 1); y++) {
+        const index = PositionedCharacter.xyToIndex(x, y);
+        if (!this.getCharacter(index) && this.isMove(character, { x, y })) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   isAttack(character, target) {
     const { type } = character.character;
     const distance = this.constructor.getDistance(character, target);
@@ -412,27 +425,68 @@ Maxscore: ${this.maxScore}`);
   }
 
   async computerStep() {
-    const attackArray = [];
+    const attackPair = { damage: 0 };
+    const movePair = { damage: 0 };
     for (const compChar of this.computerTeam.members) {
       for (const gamerChar of this.gamerTeam.members) {
+        const { attack } = compChar.character;
+        const { defence } = gamerChar.character;
+        const damage = Math.round(Math.max(attack - defence, attack * 0.1));
+
         if (this.isAttack(compChar, { x: gamerChar.x, y: gamerChar.y })) {
-          attackArray.push({ compChar, gamerChar });
+          if (damage > attackPair.damage) {
+            attackPair.compChar = compChar;
+            attackPair.gamerChar = gamerChar;
+            attackPair.damage = damage;
+          }
+        } else if (this.isFreeMove(compChar) && (damage > movePair.damage)) {
+          movePair.compChar = compChar;
+          movePair.gamerChar = gamerChar;
+          movePair.damage = damage;
         }
       }
     }
 
-    if (attackArray.length) {
-      attackArray[0].gamerChar.character.health = await this.attack(
-        attackArray[0].compChar,
-        attackArray[0].gamerChar,
-      );
-      if (attackArray[0].gamerChar.character.health === 0) {
-        const i = this.gamerTeam.members
-          .findIndex((item) => item.position === attackArray[0].gamerChar.position);
+    if (attackPair.damage) {
+      const { compChar, gamerChar } = attackPair;
+      gamerChar.character.health = await this.attack(compChar, gamerChar);
+      if (!gamerChar.character.health) {
+        const i = this.gamerTeam.members.findIndex((item) => item === gamerChar);
         this.gamerTeam.members.splice(i, 1);
       }
       this.redraw();
+
+      if (!this.gamerTeam.size) {
+        GamePlay.showMessage('Game over :(');
+        return;
+      }
+
+      this.gamePlay.setCursor(cursor.auto);
+      this.isGamerStep = true;
+      return;
     }
+
+    const { compChar, gamerChar } = movePair;
+    const { x: x0, y: y0 } = compChar;
+    let distance = boardSize;
+    let position;
+
+    for (let x = Math.max(x0 - 4, 0); x <= Math.min(x0 + 4, boardSize - 1); x++) {
+      for (let y = Math.max(y0 - 4, 0); y <= Math.min(y0 + 4, boardSize - 1); y++) {
+        const index = PositionedCharacter.xyToIndex(x, y);
+        if (!this.getCharacter(index) && this.isMove(compChar, { x, y })) {
+          const newDistance = this.constructor.getDistance({ x, y }, gamerChar);
+          if (newDistance < distance) {
+            distance = newDistance;
+            position = index;
+          }
+        }
+      }
+    }
+
+    compChar.position = position;
+    this.redraw();
+
     this.gamePlay.setCursor(cursor.auto);
     this.isGamerStep = true;
   }
