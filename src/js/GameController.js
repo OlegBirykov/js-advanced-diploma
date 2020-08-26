@@ -132,7 +132,7 @@ export default class GameController {
     this.gamePlay.drawUi(themes[this.level]);
     this.redraw();
 
-    if (!this.isGamerStep && this.computerTeam.members.size) {
+    if (!this.isGamerStep && this.computerTeam.size) {
       this.gamePlay.setCursor(cursor.notallowed);
       setTimeout(() => this.computerStep(), 1000);
     } else {
