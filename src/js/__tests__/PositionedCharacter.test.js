@@ -1,5 +1,5 @@
-import PositionedCharacter from '../PositionedCharacter';
-import Character from '../Character';
+import PositionedCharacter from '../characters/PositionedCharacter';
+import Character from '../characters/Character';
 
 class Daemon extends Character {
   constructor(level) {

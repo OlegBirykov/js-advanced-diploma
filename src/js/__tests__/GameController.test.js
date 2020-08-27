@@ -1,10 +1,10 @@
-import GamePlay from '../GamePlay';
-import GameController from '../GameController';
-import GameStateService from '../GameStateService';
-import cursors from '../cursors';
+import GamePlay from '../ui/GamePlay';
+import GameController from '../api/GameController';
+import GameStateService from '../api/GameStateService';
+import cursors from '../ui/cursors';
 
-jest.mock('../GameStateService');
-jest.mock('../GamePlay');
+jest.mock('../api/GameStateService');
+jest.mock('../ui/GamePlay');
 
 beforeEach(() => {
   jest.resetAllMocks();

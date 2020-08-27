@@ -1,16 +1,16 @@
-import themes from './themes';
-import Team from './Team';
-import Bowman from './Bowman';
-import Swordsman from './Swordsman';
-import Magician from './Magician';
-import Vampire from './Vampire';
-import Undead from './Undead';
-import Daemon from './Daemon';
-import PositionedCharacter from './PositionedCharacter';
+import themes from '../ui/themes';
+import Team from '../characters/Team';
+import Bowman from '../characters/classes/Bowman';
+import Swordsman from '../characters/classes/Swordsman';
+import Magician from '../characters/classes/Magician';
+import Vampire from '../characters/classes/Vampire';
+import Undead from '../characters/classes/Undead';
+import Daemon from '../characters/classes/Daemon';
+import PositionedCharacter from '../characters/PositionedCharacter';
 import GameState from './GameState';
-import GamePlay from './GamePlay';
-import cursor from './cursors';
-import { boardSize } from './utils';
+import GamePlay from '../ui/GamePlay';
+import cursor from '../ui/cursors';
+import { boardSize } from '../ui/utils';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -134,7 +134,7 @@ export default class GameController {
 
     if (!this.isGamerStep && this.computerTeam.size) {
       this.gamePlay.setCursor(cursor.notallowed);
-      setTimeout(() => this.computerStep(), 1000);
+      setTimeout(() => this.computerStep(), 300);
     } else {
       this.gamePlay.setCursor(cursor.auto);
     }
@@ -230,7 +230,7 @@ export default class GameController {
         this.isGamerStep = false;
         this.redraw();
 
-        setTimeout(() => this.computerStep(), 1000);
+        setTimeout(() => this.computerStep(), 300);
         break;
 
       case 'red':
@@ -250,7 +250,7 @@ export default class GameController {
 
         if (this.computerTeam.size) {
           this.isGamerStep = false;
-          setTimeout(() => this.computerStep(), 1000);
+          setTimeout(() => this.computerStep(), 300);
           break;
         }
 

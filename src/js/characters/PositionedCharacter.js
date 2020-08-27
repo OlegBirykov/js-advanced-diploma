@@ -1,5 +1,5 @@
 import Character from './Character';
-import { boardSize } from './utils';
+import { boardSize } from '../ui/utils';
 
 export default class PositionedCharacter {
   constructor(character, position) {

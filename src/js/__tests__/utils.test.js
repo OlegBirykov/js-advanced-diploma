@@ -1,4 +1,4 @@
-import { calcTileType, calcHealthLevel } from '../utils';
+import { calcTileType, calcHealthLevel } from '../ui/utils';
 
 test('position of cell should return', () => {
   expect(calcTileType(0)).toBe('top-left');
