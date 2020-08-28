@@ -33,9 +33,15 @@ export default class GameController {
   }
 
   init() {
-    this.gamePlay.addCellClickListener((index) => this.onCellClick(index));
-    this.gamePlay.addCellEnterListener((index) => this.onCellEnter(index));
-    this.gamePlay.addCellLeaveListener((index) => this.onCellLeave(index));
+    this.gamePlay.addCellClickListener(
+      (index) => this.onCellClick(index),
+    );
+    this.gamePlay.addCellEnterListener(
+      (index) => this.onCellEnter(index),
+    );
+    this.gamePlay.addCellLeaveListener(
+      (index) => this.onCellLeave(index),
+    );
 
     this.gamePlay.addNewGameListener(() => this.newGame());
     this.gamePlay.addLoadGameListener(() => this.loadGame());
@@ -87,11 +93,20 @@ export default class GameController {
       gamerTeam.members.forEach((item, index) => {
         const {
           character: {
-            level, _attack: attack, _defence: defence, _health: health, type,
+            level,
+            _attack: attack,
+            _defence: defence,
+            _health: health,
+            type,
           },
           position,
         } = item;
-        this.gamerTeam.members.push(new PositionedCharacter(new Classes[type](level), position));
+        this.gamerTeam.members.push(
+          new PositionedCharacter(
+            new Classes[type](level),
+            position,
+          ),
+        );
         this.gamerTeam.members[index].character.attack = attack;
         this.gamerTeam.members[index].character.defence = defence;
         this.gamerTeam.members[index].character.health = health;
@@ -100,11 +115,20 @@ export default class GameController {
       computerTeam.members.forEach((item, index) => {
         const {
           character: {
-            level, _attack: attack, _defence: defence, _health: health, type,
+            level,
+            _attack: attack,
+            _defence: defence,
+            _health: health,
+            type,
           },
           position,
         } = item;
-        this.computerTeam.members.push(new PositionedCharacter(new Classes[type](level), position));
+        this.computerTeam.members.push(
+          new PositionedCharacter(
+            new Classes[type](level),
+            position,
+          ),
+        );
         this.computerTeam.members[index].character.attack = attack;
         this.computerTeam.members[index].character.defence = defence;
         this.computerTeam.members[index].character.health = health;
@@ -155,20 +179,52 @@ export default class GameController {
 
     switch (this.level) {
       case 1:
-        this.gamerTeam.addCharacters([Bowman, Swordsman], 1, 2);
-        this.computerTeam.addCharacters([Vampire, Undead, Daemon], 1, 2);
+        this.gamerTeam.addCharacters(
+          [Bowman, Swordsman],
+          1,
+          2,
+        );
+        this.computerTeam.addCharacters(
+          [Vampire, Undead, Daemon],
+          1,
+          2,
+        );
         break;
       case 2:
-        this.gamerTeam.addCharacters([Bowman, Swordsman, Magician], 1, 1);
-        this.computerTeam.addCharacters([Vampire, Undead, Daemon], 2, this.gamerTeam.size);
+        this.gamerTeam.addCharacters(
+          [Bowman, Swordsman, Magician],
+          1,
+          1,
+        );
+        this.computerTeam.addCharacters(
+          [Vampire, Undead, Daemon],
+          2,
+          this.gamerTeam.size,
+        );
         break;
       case 3:
-        this.gamerTeam.addCharacters([Bowman, Swordsman, Magician], 2, 2);
-        this.computerTeam.addCharacters([Vampire, Undead, Daemon], 3, this.gamerTeam.size);
+        this.gamerTeam.addCharacters(
+          [Bowman, Swordsman, Magician],
+          2,
+          2,
+        );
+        this.computerTeam.addCharacters(
+          [Vampire, Undead, Daemon],
+          3,
+          this.gamerTeam.size,
+        );
         break;
       default:
-        this.gamerTeam.addCharacters([Bowman, Swordsman, Magician], 3, 2);
-        this.computerTeam.addCharacters([Vampire, Undead, Daemon], 4, this.gamerTeam.size);
+        this.gamerTeam.addCharacters(
+          [Bowman, Swordsman, Magician],
+          3,
+          2,
+        );
+        this.computerTeam.addCharacters(
+          [Vampire, Undead, Daemon],
+          4,
+          this.gamerTeam.size,
+        );
         break;
     }
 
@@ -206,7 +262,9 @@ export default class GameController {
   }
 
   redraw() {
-    this.gamePlay.redrawPositions([...this.gamerTeam.members, ...this.computerTeam.members]);
+    this.gamePlay.redrawPositions(
+      [...this.gamerTeam.members, ...this.computerTeam.members],
+    );
   }
 
   async onCellClick(index) {
@@ -243,7 +301,9 @@ export default class GameController {
 
         ch.character.health = await this.attack(selCh, ch);
         if (ch.character.health === 0) {
-          const i = this.computerTeam.members.findIndex((item) => item.position === index);
+          const i = this.computerTeam.members.findIndex(
+            (item) => item.position === index,
+          );
           this.computerTeam.members.splice(i, 1);
         }
         this.redraw();
@@ -351,11 +411,15 @@ Maxscore: ${this.maxScore}`);
   }
 
   getCharacter(index) {
-    let i = this.gamerTeam.members.findIndex((item) => item.position === index);
+    let i = this.gamerTeam.members.findIndex(
+      (item) => item.position === index,
+    );
     if (i !== -1) {
       return this.gamerTeam.members[i];
     }
-    i = this.computerTeam.members.findIndex((item) => item.position === index);
+    i = this.computerTeam.members.findIndex(
+      (item) => item.position === index,
+    );
     if (i !== -1) {
       return this.computerTeam.members[i];
     }
@@ -390,8 +454,16 @@ Maxscore: ${this.maxScore}`);
 
   isFreeMove(character) {
     const { x: x0, y: y0 } = character;
-    for (let x = Math.max(x0 - 4, 0); x <= Math.min(x0 + 4, boardSize - 1); x++) {
-      for (let y = Math.max(y0 - 4, 0); y <= Math.min(y0 + 4, boardSize - 1); y++) {
+    for (
+      let x = Math.max(x0 - 4, 0);
+      x <= Math.min(x0 + 4, boardSize - 1);
+      x++
+    ) {
+      for (
+        let y = Math.max(y0 - 4, 0);
+        y <= Math.min(y0 + 4, boardSize - 1);
+        y++
+      ) {
         const index = PositionedCharacter.xyToIndex(x, y);
         if (!this.getCharacter(index) && this.isMove(character, { x, y })) {
           return true;
@@ -451,7 +523,9 @@ Maxscore: ${this.maxScore}`);
       const { compChar, gamerChar } = attackPair;
       gamerChar.character.health = await this.attack(compChar, gamerChar);
       if (!gamerChar.character.health) {
-        const i = this.gamerTeam.members.findIndex((item) => item === gamerChar);
+        const i = this.gamerTeam.members.findIndex(
+          (item) => item === gamerChar,
+        );
         this.gamerTeam.members.splice(i, 1);
       }
       this.redraw();
@@ -471,8 +545,16 @@ Maxscore: ${this.maxScore}`);
     let distance = boardSize;
     let position;
 
-    for (let x = Math.max(x0 - 4, 0); x <= Math.min(x0 + 4, boardSize - 1); x++) {
-      for (let y = Math.max(y0 - 4, 0); y <= Math.min(y0 + 4, boardSize - 1); y++) {
+    for (
+      let x = Math.max(x0 - 4, 0);
+      x <= Math.min(x0 + 4, boardSize - 1);
+      x++
+    ) {
+      for (
+        let y = Math.max(y0 - 4, 0);
+        y <= Math.min(y0 + 4, boardSize - 1);
+        y++
+      ) {
         const index = PositionedCharacter.xyToIndex(x, y);
         if (!this.getCharacter(index) && this.isMove(compChar, { x, y })) {
           const newDistance = this.constructor.getDistance({ x, y }, gamerChar);
