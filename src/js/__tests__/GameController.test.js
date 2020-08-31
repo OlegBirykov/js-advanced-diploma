@@ -132,19 +132,121 @@ test('cursor should be selected', () => {
   gameState.isGamerStep = true;
 });
 
-/*
+test('method should upgrade existing characters', () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
 
-test('object constructor should throw an error', () => {
-  const error1 = 'character must be instance of Character or its children';
-  const error2 = 'position must be a number';
-  expect(() => new PositionedCharacter({ level: 1 }, 25)).toThrow(error1);
-  expect(() => new PositionedCharacter(new Daemon(1))).toThrow(error2);
+  gameCtrl.levelUp();
+
+  expect(gameCtrl.gamerTeam.members[1].character.attack).toBe(33);
+  expect(gameCtrl.gamerTeam.members[1].character.defence).toBe(33);
 });
 
-test('position number should be converted to coordinates', () => {
-  const character = new PositionedCharacter(new Daemon(1), 23);
-  expect(character.x).toBe(7);
-  expect(character.y).toBe(2);
+test('method should create new characters', () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  expect(gameCtrl.gamerTeam.size).toBe(2);
+
+  gameCtrl.levelUp();
+  expect(gameCtrl.gamerTeam.size).toBe(3);
+
+  gameCtrl.levelUp();
+  expect(gameCtrl.gamerTeam.size).toBe(5);
+
+  gameCtrl.levelUp();
+  expect(gameCtrl.gamerTeam.size).toBe(7);
 });
 
-*/
+test('character should move', async () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.selectedCharacterIndex = 33;
+  gameCtrl.targetColor = 'green';
+
+  gameCtrl.isGamerStep = false;
+  await gameCtrl.onCellClick(35);
+  expect(gameCtrl.gamerTeam.members[0].position).toBe(33);
+
+  gameCtrl.isGamerStep = true;
+  await gameCtrl.onCellClick(35);
+  expect(gameCtrl.gamerTeam.members[0].position).toBe(35);
+});
+
+test('character should do damage', async () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.selectedCharacterIndex = 33;
+  gameCtrl.targetColor = 'red';
+  gameCtrl.computerTeam.members[1].position = 34;
+
+  await gameCtrl.onCellClick(34);
+  expect(gameCtrl.computerTeam.members[1].character.health).toBe(46);
+
+  gameCtrl.selectedCharacterIndex = 33;
+  gameCtrl.targetColor = 'red';
+  gameCtrl.computerTeam.members[1].character.health = 2;
+  gameCtrl.isGamerStep = true;
+
+  await gameCtrl.onCellClick(34);
+  expect(gameCtrl.computerTeam.size).toBe(1);
+});
+
+test('level should be completed', async () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.selectedCharacterIndex = 33;
+  gameCtrl.targetColor = 'red';
+  gameCtrl.computerTeam.members[1].character.health = 2;
+  gameCtrl.computerTeam.members[1].position = 34;
+
+  gameCtrl.computerTeam.members.shift();
+
+  gameCtrl.maxScore = 90;
+
+  await gameCtrl.onCellClick(34);
+  expect(gameCtrl.level).toBe(2);
+  expect(gameCtrl.maxScore).toBe(100);
+});
+
+test('fourth level should be last', async () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.selectedCharacterIndex = 33;
+  gameCtrl.targetColor = 'red';
+  gameCtrl.computerTeam.members[1].character.health = 2;
+  gameCtrl.computerTeam.members[1].position = 34;
+
+  gameCtrl.computerTeam.members.shift();
+
+  gameCtrl.level = 4;
+
+  await gameCtrl.onCellClick(34);
+  expect(gameCtrl.level).toBe(4);
+  expect(gameCtrl.gamerTeam.size).toBe(0);
+});
+
+test('only character of gamer should be selected', async () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.selectedCharacterIndex = null;
+  gameCtrl.targetColor = 'yellow';
+
+  await gameCtrl.onCellClick(33);
+  expect(gameCtrl.selectedCharacterIndex).toBe(33);
+
+  await gameCtrl.onCellClick(32);
+  expect(gameCtrl.selectedCharacterIndex).toBe(33);
+
+  await gameCtrl.onCellClick(25);
+  expect(gameCtrl.gamePlay.deselectCell).toBeCalledWith(33);
+  expect(gameCtrl.selectedCharacterIndex).toBe(25);
+
+  await gameCtrl.onCellClick(55);
+  expect(GamePlay.showError).toBeCalledWith('This character is disable for selection');
+});

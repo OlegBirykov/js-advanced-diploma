@@ -33,15 +33,9 @@ export default class GameController {
   }
 
   init() {
-    this.gamePlay.addCellClickListener(
-      (index) => this.onCellClick(index),
-    );
-    this.gamePlay.addCellEnterListener(
-      (index) => this.onCellEnter(index),
-    );
-    this.gamePlay.addCellLeaveListener(
-      (index) => this.onCellLeave(index),
-    );
+    this.gamePlay.addCellClickListener((index) => this.onCellClick(index));
+    this.gamePlay.addCellEnterListener((index) => this.onCellEnter(index));
+    this.gamePlay.addCellLeaveListener((index) => this.onCellLeave(index));
 
     this.gamePlay.addNewGameListener(() => this.newGame());
     this.gamePlay.addLoadGameListener(() => this.loadGame());
