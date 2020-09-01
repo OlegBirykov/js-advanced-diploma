@@ -2,6 +2,13 @@ import GamePlay from '../ui/GamePlay';
 import GameController from '../api/GameController';
 import GameStateService from '../api/GameStateService';
 import cursors from '../ui/cursors';
+import PositionedCharacter from '../characters/PositionedCharacter';
+import Swordsman from '../characters/classes/Swordsman';
+import Bowman from '../characters/classes/Bowman';
+import Magician from '../characters/classes/Magician';
+import Vampire from '../characters/classes/Vampire';
+import Undead from '../characters/classes/Undead';
+import Daemon from '../characters/classes/Daemon';
 
 jest.mock('../api/GameStateService');
 jest.mock('../ui/GamePlay');
@@ -249,4 +256,129 @@ test('only character of gamer should be selected', async () => {
 
   await gameCtrl.onCellClick(55);
   expect(GamePlay.showError).toBeCalledWith('This character is disable for selection');
+});
+
+test('hint should be showed', () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  const message = '\u{1F396}1 \u{2694}40 \u{1F6E1}10 \u{2764}50';
+  gameCtrl.onCellEnter(33);
+  expect(gameCtrl.gamePlay.showCellTooltip).toBeCalledWith(message, 33);
+});
+
+test('ring should move to cursor', () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.selectedCharacterIndex = 25;
+  gameCtrl.targetIndex = 33;
+
+  gameCtrl.onCellEnter(41);
+  expect(gameCtrl.gamePlay.deselectCell).toBeCalledWith(33);
+});
+
+test('character of gamer should highlighted in yellow', () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.isGamerStep = false;
+  gameCtrl.selectedCharacterIndex = 25;
+  gameCtrl.targetColor = '';
+
+  gameCtrl.onCellEnter(33);
+  expect(gameCtrl.targetColor).toBe('');
+
+  gameCtrl.isGamerStep = true;
+  gameCtrl.selectedCharacterIndex = 25;
+  gameCtrl.targetColor = '';
+
+  gameCtrl.onCellEnter(33);
+  expect(gameCtrl.targetColor).toBe('yellow');
+});
+
+test('near cell should highlighted in green', () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.selectedCharacterIndex = 33;
+  gameCtrl.targetColor = '';
+
+  gameCtrl.onCellEnter(34);
+  expect(gameCtrl.targetColor).toBe('green');
+});
+
+test('near character of computer should highlighted in red', () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.selectedCharacterIndex = 33;
+  gameCtrl.computerTeam.members[0].position = 34;
+  gameCtrl.targetColor = '';
+
+  gameCtrl.onCellEnter(34);
+  expect(gameCtrl.targetColor).toBe('red');
+});
+
+test('far cell should not highlighted', () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.selectedCharacterIndex = 33;
+
+  gameCtrl.onCellEnter(63);
+  expect(gameCtrl.targetIndex).toBe(null);
+});
+
+test('hint should be disabled', () => {
+  gameCtrl.isGamerStep = false;
+  gameCtrl.onCellLeave(16);
+  expect(gameCtrl.gamePlay.hideCellTooltip).not.toBeCalled();
+
+  gameCtrl.isGamerStep = true;
+  gameCtrl.onCellLeave(16);
+  expect(gameCtrl.gamePlay.hideCellTooltip).toBeCalledWith(16);
+});
+
+test('method checks the move distance', () => {
+  const char1 = new PositionedCharacter(new Swordsman(), 0);
+  const char2 = new PositionedCharacter(new Bowman(), 0);
+  const char3 = new PositionedCharacter(new Magician(), 0);
+
+  const target = {
+    x: 2,
+    y: 2,
+  };
+
+  expect(gameCtrl.isMove(char1, target)).toBe(true);
+  expect(gameCtrl.isMove(char2, target)).toBe(true);
+  expect(gameCtrl.isMove(char3, target)).toBe(false);
+});
+
+test('method checks the free cells for move', () => {
+  gameCtrl.stateService.load.mockReturnValue(gameState);
+  gameCtrl.loadGame();
+
+  gameCtrl.computerTeam.members[1].position = 0;
+  gameCtrl.gamerTeam.members[0].position = 1;
+  gameCtrl.gamerTeam.members[1].position = 8;
+  expect(gameCtrl.isFreeMove(gameCtrl.computerTeam.members[1])).toBe(true);
+
+  gameCtrl.computerTeam.members[0].position = 9;
+  expect(gameCtrl.isFreeMove(gameCtrl.computerTeam.members[1])).toBe(false);
+});
+
+test('method checks the attack distance', () => {
+  const char1 = new PositionedCharacter(new Undead(), 0);
+  const char2 = new PositionedCharacter(new Vampire(), 0);
+  const char3 = new PositionedCharacter(new Daemon(), 0);
+
+  const target = {
+    x: 2,
+    y: 2,
+  };
+
+  expect(gameCtrl.isAttack(char1, target)).toBe(false);
+  expect(gameCtrl.isAttack(char2, target)).toBe(true);
+  expect(gameCtrl.isAttack(char3, target)).toBe(true);
 });
